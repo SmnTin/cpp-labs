@@ -4,7 +4,7 @@
 #include "string.h"
 
 static void mergesort_impl(char *arr, char *aux, size_t arr_len, size_t elem_size,
-                    int (*cmp)(const void *, const void *)) {
+                           int (*cmp)(const void *, const void *)) {
     if (arr_len <= 1)
         return;
 

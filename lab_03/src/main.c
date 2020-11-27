@@ -125,7 +125,7 @@ static int detect_type(const char *type_str, size_t *type_size,
  * Returns 0 on success.
  * Returns -1 if the reading failed.
  */
-static int parse_array(void *arr, const char *const * elems_strs,
+static int parse_array(void *arr, const char *const *elems_strs,
                        size_t arr_len, size_t elem_size,
                        int (*read_elem)(const char *, void *)) {
     for (size_t i = 0; i < arr_len; ++i)
@@ -148,7 +148,7 @@ static int parse_array(void *arr, const char *const * elems_strs,
  * Returns -2 if the memory allocation failed.
  */
 
-static int parse_args(int argc, const char *const * argv, void **arr,
+static int parse_args(int argc, const char *const *argv, void **arr,
                       size_t *arr_len, size_t *type_size,
                       int (**read_elem)(const char *, void *),
                       int (**print_elem)(const void *),

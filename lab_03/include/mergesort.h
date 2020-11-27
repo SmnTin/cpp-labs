@@ -8,6 +8,6 @@
  * Returns -1 if failed to allocate enough auxiliary memory.
  */
 int mergesort(void *arr, size_t arr_len, size_t elem_size,
-              int (*cmp)(const void*, const void*));
+              int (*cmp)(const void *, const void *));
 
 #endif //LAB_03
