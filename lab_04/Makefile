@@ -4,15 +4,15 @@ FLAGS = -Wall -Wextra -std=c99 -pedantic -Wno-gnu -Wmissing-prototypes -Wpointer
                  -Wshadow -Wcast-qual -Wstrict-prototypes -Wold-style-definition\
                  -Wno-unused-parameter -O0 -g
 
-all: lab_04 obj/ obj/clist.o obj/main.o
+all: lab_04 obj obj/clist.o obj/main.o
 
-obj/:
+obj:
 		if [ ! -d "obj" ]; then mkdir obj; fi
 
-obj/clist.o: obj/ include/clist.h src/clist.c
+obj/clist.o: obj include/clist.h src/clist.c
 		gcc $(FLAGS) -c src/clist.c -o $@ -I include/
 
-obj/main.o: obj/ include/clist.h src/main.c
+obj/main.o: obj include/clist.h src/main.c
 		gcc $(FLAGS) -c src/main.c -o $@ -I include/
 
 lab_04: obj/clist.o obj/main.o
