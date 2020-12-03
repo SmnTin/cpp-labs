@@ -174,9 +174,11 @@ static int handle_len(intrusive_list_t *list, int argc, char **argv) {
  */
 static void tokenize_cmd(char *cmd, int *argc, char ***argv) {
     // Trim new-line
-    char *back = cmd + (strlen(cmd) - 1);
-    if (*back == '\n' || *back == '\r')
-        *back = '\0';
+    if (*cmd != 0) {
+        char *back = cmd + (strlen(cmd) - 1);
+        if (*back == '\n' || *back == '\r')
+            *back = '\0';
+    }
 
     *argc = 0;
 
@@ -215,42 +217,43 @@ static int handle_cmd(char *cmd, intrusive_list_t *list) {
     char **argv;
     tokenize_cmd(cmd, &argc, &argv);
 
-    // It's absolutely ok
-    if (argc == 0)
-        return 0;
-
-    if (strcmp(argv[0], exit_cmd) == 0)
-        return 1;
 
     int res = -1;
-    for (size_t i = 0; i < N; ++i) {
-        if (strcmp(argv[0], cmd_names[i]) == 0) {
-            res = (*cmd_handlers[i])(list, argc, argv);
-            break;
-        }
-    }
+
+    if (argc == 0) // It's absolutely ok
+        res = 0;
+    else if (strcmp(argv[0], exit_cmd) == 0)
+        res = 1;
+    else
+        for (size_t i = 0; i < N; ++i)
+            if (strcmp(argv[0], cmd_names[i]) == 0) {
+                res = (*cmd_handlers[i])(list, argc, argv);
+                break;
+            }
 
     free(argv);
     return res;
 }
 
-int main() {
+int main(void) {
     intrusive_list_t list;
     init_list(&list);
 
     enum {
-        buffer_size = 1000
+        buffer_size = 100
     };
     char buffer[buffer_size];
 
     while (true) {
         fgets(buffer, buffer_size, stdin);
         int result = handle_cmd(buffer, &list);
-        if (result == 1) {
-            remove_all_points(&list);
+        if (result == 1)
             break;
-        } else if (result == -1) {
+        else if (result == -1)
             printf("Unknown command\n");
-        }
     }
+
+    remove_all_points(&list);
+
+    return 0;
 }
