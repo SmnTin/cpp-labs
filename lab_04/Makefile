@@ -4,7 +4,7 @@ FLAGS = -Wall -Wextra -std=c99 -pedantic -Wno-gnu -Wmissing-prototypes -Wpointer
                  -Wshadow -Wcast-qual -Wstrict-prototypes -Wold-style-definition\
                  -Wno-unused-parameter -O0 -g
 
-all: lab_04
+all: lab_04 obj/ obj/clist.o obj/main.o
 
 obj/:
 		if [ ! -d "obj" ]; then mkdir obj; fi
