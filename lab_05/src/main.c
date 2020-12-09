@@ -7,6 +7,7 @@
 #include "stdio.h"
 #include "string.h"
 #include "stdbool.h"
+#include "stdint.h"
 
 /**
  * Reads points from file and inserts them into the list.
@@ -70,8 +71,7 @@ static int handle_savetext(intrusive_list_t *list, int argc, char **argv) {
     return 2;
 }
 
-
-static inline bool is_little_endian() {
+static inline bool is_little_endian(void) {
     uint16_t val = 0x0001;
     return *(uint8_t *) &val;
 }
