@@ -1,4 +1,3 @@
-#include <__wctype.h>
 #include "clist.h"
 
 #include "point_list.h"
