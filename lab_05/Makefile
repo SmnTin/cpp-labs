@@ -2,7 +2,7 @@
 # https://stackoverflow.com/questions/154630/recommended-gcc-warning-options-for-c
 FLAGS = -Wall -Wextra -std=c99 -pedantic -Wno-gnu -Wmissing-prototypes -Wpointer-arith\
                  -Wshadow -Wcast-qual -Wstrict-prototypes -Wold-style-definition\
-                 -Wno-unused-parameter -O0 -g
+                 -Wno-unused-parameter -O2 -g
 
 all: lab_05 obj obj/clist.o obj/main.o
 

@@ -99,7 +99,7 @@ static inline int int_to_little_endian(int v) {
 // To convert 3-byte negative to 5-byte negative
 // all we have to do is just to fill 4-th byte with ones.
 static inline int conv_3byte_to_4byte(int b3) {
-    if (!(b3 & 0xA00000))
+    if (!(b3 & 0x800000))
         return b3;
     int b4 = (b3 | (0xFF << 24));
     return b4;
