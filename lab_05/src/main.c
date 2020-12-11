@@ -32,7 +32,7 @@ static int handle_loadtext(intrusive_list_t *list, int argc, char **argv) {
     }
 
     int x, y;
-    while (fscanf(input, "%d %d", &x, &y) == 2) {
+    while (fscanf(input, "%d %d", &x, &y) == 2) { // read exactly two numbers
         point_t *point = malloc(sizeof(point_t));
         assert(point);
 
@@ -71,6 +71,8 @@ static int handle_savetext(intrusive_list_t *list, int argc, char **argv) {
     return 2;
 }
 
+// If the system is little endian,
+// the first byte appears to be 1.
 static inline bool is_little_endian(void) {
     uint16_t val = 0x0001;
     return *(uint8_t *) &val;
@@ -99,9 +101,9 @@ static inline int int_to_little_endian(int v) {
 // To convert 3-byte negative to 5-byte negative
 // all we have to do is just to fill 4-th byte with ones.
 static inline int conv_3byte_to_4byte(int b3) {
-    if (!(b3 & 0x800000))
+    if (!(b3 & 0x800000)) // The most significant bit
         return b3;
-    int b4 = (b3 | (0xFF << 24));
+    int b4 = (b3 | (0xFF << 24)); // shift by 3 bytes
     return b4;
 }
 
@@ -124,10 +126,11 @@ static int handle_loadbin(intrusive_list_t *list, int argc, char **argv) {
         return -1;
     }
 
+    const int bytesTaken = 3;
     // X and Y in big-endian
     int lx = 0, ly = 0;
-    while (fread((uint8_t *) &lx, 1, 3, input) == 3 &&
-           fread((uint8_t *) &ly, 1, 3, input) == 3) {
+    while (fread((uint8_t *) &lx, sizeof(uint8_t), bytesTaken, input) == bytesTaken &&
+           fread((uint8_t *) &ly, sizeof(uint8_t), bytesTaken, input) == bytesTaken) {
         int x = conv_3byte_to_4byte(little_endian_to_int(lx));
         int y = conv_3byte_to_4byte(little_endian_to_int(ly));
 
@@ -149,8 +152,9 @@ static void savebin_each(intrusive_node_t *node, void *data) {
     int lx = int_to_little_endian(point->x); // X in little-endian
     int ly = int_to_little_endian(point->y); // Y in little-endian
 
-    fwrite((uint8_t *) &lx, 1, 3, output);
-    fwrite((uint8_t *) &ly, 1, 3, output);
+    const int bytesWritten = 3;
+    fwrite((uint8_t *) &lx, sizeof(uint8_t), bytesWritten, output);
+    fwrite((uint8_t *) &ly, sizeof(uint8_t), bytesWritten, output);
 }
 
 /**
