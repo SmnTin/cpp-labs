@@ -27,10 +27,6 @@ struct __attribute__((packed)) BITMAPINFOHEADER {
     uint32_t biClrImportant;
 };
 
-typedef struct {
-    uint8_t b, g, r;
-} __attribute__((packed)) rgb_triple_t;
-
 struct __bmp {
     struct BITMAPFILEHEADER file_header;
     struct BITMAPINFOHEADER info_header;
@@ -51,6 +47,7 @@ static void **alloc_2d_array(size_t rows, size_t row_size, size_t content_size) 
     void *raw_data = malloc(pnt_arr_size + content_size);
     if (!raw_data)
         return NULL;
+    memset(raw_data, 0, pnt_arr_size + content_size);
 
     void **pnt_arr = (void **) raw_data;
     char *content = (char *) raw_data + pnt_arr_size;
@@ -139,31 +136,36 @@ bmp_err_t load_bmp(bmp_t **out_bmp, FILE *in_file) {
     return BMP_OK;
 }
 
-static inline bmp_err_t write_file_header(bmp_t *bmp, FILE *out_file) {
+static inline bmp_err_t write_file_header(const bmp_t *bmp, FILE *out_file) {
+    struct BITMAPFILEHEADER correct_header = bmp->file_header;
+
     // Writing pixels right after headers
     size_t content_pos =
             sizeof(struct BITMAPFILEHEADER) +
             sizeof(struct BITMAPINFOHEADER);
-    bmp->file_header.bfOffBits = content_pos;
+    correct_header.bfOffBits = content_pos;
+    correct_header.bfSize = content_pos + bmp->content_size;
 
-    size_t written_items = fwrite(&bmp->file_header, sizeof(struct BITMAPFILEHEADER), 1, out_file);
+    size_t written_items = fwrite(&correct_header, sizeof(struct BITMAPFILEHEADER), 1, out_file);
     if (written_items != 1)
         return BMP_ERR_FILE_WRITE;
     return BMP_OK;
 }
 
-static inline bmp_err_t write_info_header(bmp_t *bmp, FILE *out_file) {
-    bmp->info_header.biHeight = bmp->size.height;
-    bmp->info_header.biWidth = bmp->size.width;
-    bmp->info_header.biSizeImage = bmp->content_size;
+static inline bmp_err_t write_info_header(const bmp_t *bmp, FILE *out_file) {
+    struct BITMAPINFOHEADER correct_header = bmp->info_header;
 
-    size_t written_items = fwrite(&bmp->info_header, sizeof(struct BITMAPINFOHEADER), 1, out_file);
+    correct_header.biHeight = bmp->size.height;
+    correct_header.biWidth = bmp->size.width;
+    correct_header.biSizeImage = bmp->content_size;
+
+    size_t written_items = fwrite(&correct_header, sizeof(struct BITMAPINFOHEADER), 1, out_file);
     if (written_items != 1)
         return BMP_ERR_FILE_WRITE;
     return BMP_OK;
 }
 
-static inline bmp_err_t write_pixel_data(bmp_t *bmp, FILE *out_file) {
+static inline bmp_err_t write_pixel_data(const bmp_t *bmp, FILE *out_file) {
     void *pixel_data = bmp->data[0];
 
     size_t written_items = fwrite(pixel_data, bmp->content_size, 1, out_file);
@@ -173,20 +175,20 @@ static inline bmp_err_t write_pixel_data(bmp_t *bmp, FILE *out_file) {
     return BMP_OK;
 }
 
-bmp_err_t save_bmp(bmp_t *bmp, FILE *out_file) {
+bmp_err_t save_bmp(const bmp_t *bmp, FILE *out_file) {
     // Ensuring we are at the beginning
     rewind(out_file);
 
     bmp_err_t bmp_err;
 
     bmp_err = write_file_header(bmp, out_file);
-    if (bmp_err != 0) return bmp_err;
+    if (bmp_err != BMP_OK) return bmp_err;
 
     bmp_err = write_info_header(bmp, out_file);
-    if (bmp_err != 0) return bmp_err;
+    if (bmp_err != BMP_OK) return bmp_err;
 
     bmp_err = write_pixel_data(bmp, out_file);
-    if (bmp_err != 0) return bmp_err;
+    if (bmp_err != BMP_OK) return bmp_err;
 
     int io_err = fflush(out_file);
     if (io_err != 0)
@@ -200,7 +202,7 @@ void free_bmp(bmp_t *bmp) {
     free(bmp);
 }
 
-static inline bmp_err_t create_bmp_with_size(bmp_t **dst, bmp_t *ref, bmp_size_t size) {
+static inline bmp_err_t create_bmp_with_size(bmp_t **dst, const bmp_t *ref, bmp_size_t size) {
     bmp_t *bmp = malloc(sizeof(bmp_t));
     if (!bmp)
         return BMP_ERR_MEM_ALLOC;
@@ -221,7 +223,7 @@ static inline bmp_err_t create_bmp_with_size(bmp_t **dst, bmp_t *ref, bmp_size_t
     return BMP_OK;
 }
 
-bmp_err_t crop_bmp(bmp_t **out_dst, bmp_t *src, bmp_rect_t region) {
+bmp_err_t crop_bmp(bmp_t **out_dst, const bmp_t *src, bmp_rect_t region) {
     *out_dst = NULL;
     bmp_err_t bmp_err;
 
@@ -246,7 +248,7 @@ bmp_err_t crop_bmp(bmp_t **out_dst, bmp_t *src, bmp_rect_t region) {
     return BMP_OK;
 }
 
-bmp_err_t clone_image(bmp_t **out_dst, bmp_t *src) {
+bmp_err_t clone_image(bmp_t **out_dst, const bmp_t *src) {
     *out_dst = NULL;
     bmp_t *dst;
 
@@ -259,7 +261,7 @@ bmp_err_t clone_image(bmp_t **out_dst, bmp_t *src) {
     return BMP_OK;
 }
 
-static inline bmp_err_t rotate_bmp_clockwise_90(bmp_t **out_dst, bmp_t *src) {
+static inline bmp_err_t rotate_bmp_clockwise_90(bmp_t **out_dst, const bmp_t *src) {
     *out_dst = NULL;
     bmp_t *dst;
 
@@ -279,7 +281,7 @@ static inline bmp_err_t rotate_bmp_clockwise_90(bmp_t **out_dst, bmp_t *src) {
     return BMP_OK;
 }
 
-bmp_err_t rotate_bmp(bmp_t **dst, bmp_t *src, bmp_rot_t rot) {
+bmp_err_t rotate_bmp(bmp_t **dst, const bmp_t *src, bmp_rot_t rot) {
     switch (rot) {
         case BMP_ROT_NONE:
             return clone_image(dst, src);
@@ -288,4 +290,15 @@ bmp_err_t rotate_bmp(bmp_t **dst, bmp_t *src, bmp_rot_t rot) {
         default:
             return BMP_ERR_ILLEGAL_ARGS;
     }
+}
+
+bmp_err_t get_pixel_in_bmp(const bmp_t *bmp, bmp_pos_t pos, rgb_triple_t **pxl) {
+    if (pos.x < 0 || pos.y < 0 ||
+        (uint32_t) pos.x >= bmp->size.width ||
+        (uint32_t) pos.y >= bmp->size.height)
+        return BMP_ERR_ILLEGAL_ARGS;
+
+    *pxl = &bmp->data[pos.y][pos.x];
+
+    return BMP_OK;
 }
