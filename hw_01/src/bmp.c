@@ -298,6 +298,9 @@ bmp_err_t get_pixel_in_bmp(const bmp_t *bmp, bmp_pos_t pos, rgb_triple_t **pxl) 
         (uint32_t) pos.y >= bmp->size.height)
         return BMP_ERR_ILLEGAL_ARGS;
 
+    // Top-down to bottom-up inversion
+    pos.y = bmp->size.height - pos.y - 1;
+
     *pxl = &bmp->data[pos.y][pos.x];
 
     return BMP_OK;

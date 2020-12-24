@@ -1,49 +1,39 @@
 #include "stego.h"
 
-static inline bmp_err_t stego_get_channel_pnt(const bmp_t *bmp, bmp_pos_t pos,
+static inline stego_err_t stego_get_channel_pnt(const bmp_t *bmp, bmp_pos_t pos,
                                                 bmp_channel_t channel, uint8_t **ch) {
     rgb_triple_t *pxl;
 
-    bmp_err_t bmp_err;
-    if ((bmp_err = get_pixel_in_bmp(bmp, pos, &pxl)) != BMP_OK)
-        return bmp_err;
+    bmp_err_t bmp_err = get_pixel_in_bmp(bmp, pos, &pxl);
+    if (bmp_err != BMP_OK)
+        return STEGO_ILLEGAL_ARGUMENTS;
 
-    switch (channel) {
-        case BMP_CHANNEL_B:
-        case BMP_CHANNEL_G:
-        case BMP_CHANNEL_R:
-            *ch = (uint8_t *) pxl + channel;
-            break;
-        default:
-            return BMP_ERR_ILLEGAL_ARGS;
-    }
+    *ch = (uint8_t *) pxl + channel;
 
-    return BMP_OK;
+    return STEGO_OK;
 }
 
-bmp_err_t put_bit_into_bmp(bmp_t *dst, bmp_pos_t pos, bmp_channel_t channel, bool bit) {
-    bmp_err_t bmp_err;
-
+stego_err_t put_bit_into_bmp(bmp_t *dst, bmp_pos_t pos, bmp_channel_t channel, bool bit) {
     uint8_t *ch = NULL;
-    if ((bmp_err = stego_get_channel_pnt(dst, pos, channel, &ch)) != BMP_OK)
-        return bmp_err;
+
+    stego_err_t stego_err = stego_get_channel_pnt(dst, pos, channel, &ch);
+    if (stego_err != STEGO_OK) return stego_err;
 
     static const uint8_t mask = 0xFE; // All except least significant
     *ch = ((*ch & mask) | bit);
 
-    return BMP_OK;
+    return STEGO_OK;
 }
 
-bmp_err_t get_bit_from_bmp(const bmp_t *src, bmp_pos_t pos, bmp_channel_t channel, bool *bit) {
-    bmp_err_t bmp_err;
-
+stego_err_t get_bit_from_bmp(const bmp_t *src, bmp_pos_t pos, bmp_channel_t channel, bool *bit) {
     uint8_t *ch = NULL;
-    if ((bmp_err = stego_get_channel_pnt(src, pos, channel, &ch)) != BMP_OK)
-        return bmp_err;
+
+    stego_err_t stego_err = stego_get_channel_pnt(src, pos, channel, &ch);
+    if (stego_err != STEGO_OK) return stego_err;
 
     *bit = (*ch & 1);
 
-    return BMP_OK;
+    return STEGO_OK;
 }
 
 #define BITS_PER_LETTER 5
@@ -109,7 +99,7 @@ static stego_err_t put_letter_in_bmp(bmp_t *bmp, FILE *key_file, int letter) {
         if (read_key_row(key_file, &pos, &channel) != 0)
             return STEGO_ERR_READ_KEY;
 
-        if (put_bit_into_bmp(bmp, pos, channel, bit) != BMP_OK)
+        if (put_bit_into_bmp(bmp, pos, channel, bit) != STEGO_OK)
             return STEGO_ILLEGAL_ARGUMENTS;
     }
 
@@ -142,8 +132,8 @@ stego_err_t read_msg_from_bmp(const bmp_t *src, FILE *key_file, FILE *msg_file) 
     while (read_key_row(key_file, &pos, &channel) == 0) {
         bool bit = 0;
 
-        if (get_bit_from_bmp(src, pos, channel, &bit) != BMP_OK)
-            return STEGO_ILLEGAL_ARGUMENTS;
+        stego_err_t stego_err = get_bit_from_bmp(src, pos, channel, &bit);
+        if (stego_err != STEGO_OK) return stego_err;
 
         cur_encoded |= (bit << bit_cnt);
         if (++bit_cnt % BITS_PER_LETTER == 0) {

@@ -18,8 +18,8 @@ typedef enum {
 } stego_err_t;
 
 void init_stego(void);
-bmp_err_t put_bit_into_bmp(bmp_t *dst, bmp_pos_t pos, bmp_channel_t channel, bool bit);
-bmp_err_t get_bit_from_bmp(const bmp_t *src, bmp_pos_t pos, bmp_channel_t channel, bool *bit);
+stego_err_t put_bit_into_bmp(bmp_t *dst, bmp_pos_t pos, bmp_channel_t channel, bool bit);
+stego_err_t get_bit_from_bmp(const bmp_t *src, bmp_pos_t pos, bmp_channel_t channel, bool *bit);
 stego_err_t write_msg_into_bmp(bmp_t *dst, FILE *key_file, FILE *msg_file);
 stego_err_t read_msg_from_bmp(const bmp_t *src, FILE *key_file, FILE *msg_file);
 
