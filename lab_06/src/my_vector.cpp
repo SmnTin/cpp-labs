@@ -25,6 +25,7 @@ MyVector::~MyVector() {
 MyVector::MyVector(const MyVector &other) {
     reserve(other.size());
     std::copy_n(other._data, other.size(), _data);
+    _sz = other.size();
 }
 
 MyVector::MyVector(MyVector &&other) noexcept {
@@ -37,6 +38,7 @@ MyVector &MyVector::operator=(const MyVector &other) {
 
     reserve(other.size());
     std::copy_n(other._data, other.size(), _data);
+    _sz = other.size();
     return *this;
 }
 
