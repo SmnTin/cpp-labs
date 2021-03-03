@@ -30,7 +30,7 @@ Matrix::Matrix(Matrix &&other) noexcept {
 }
 
 Matrix::~Matrix() {
-    operator delete[](_data);
+    operator delete(_data);
 }
 
 void Matrix::swap(Matrix &other) {
@@ -44,7 +44,7 @@ Matrix &Matrix::operator=(const Matrix &other) {
         return *this;
 
     if (_rows != other._rows || _cols != other._cols) {
-        operator delete[](_data);
+        operator delete(_data);
         _data = alloc_2d_array(other._rows, other._cols);
     }
 
